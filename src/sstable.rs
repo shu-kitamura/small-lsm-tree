@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, HashMap}, fs::File, io::{BufReader, BufWriter, Error, Read, Seek, Write}, path::PathBuf};
+use std::{collections::{BTreeMap, HashMap}, fs::{self, File}, io::{BufReader, BufWriter, Error, Read, Seek, Write}, path::PathBuf};
 
 
 pub struct SSTable {
@@ -26,6 +26,34 @@ impl SSTable {
         Ok(SSTable {
             path: filepath,
             index
+        })
+    }
+
+    pub fn from_file(filepath: PathBuf) -> Result<Self, Error> {
+        let mut reader: BufReader<File> = match File::open(&filepath) {
+            Ok(f) => BufReader::new(f),
+            Err(e) => return Err(e)
+        };
+
+        let filesize: usize = match fs::metadata(&filepath) {
+            Ok(metadata) => metadata.len() as usize,
+            Err(e) => return Err(e)
+        };
+
+        let mut offset: usize = 0;
+        let mut index: HashMap<String, usize> = HashMap::new();
+
+        while offset < filesize {
+            let (key, value) = read_key_value(&mut reader, offset)?;
+
+            index.insert(key.clone(), offset);
+
+            offset += key.len() + value.len() + 16;
+        }
+
+        Ok(SSTable{
+            path: filepath,
+            index: index
         })
     }
 
