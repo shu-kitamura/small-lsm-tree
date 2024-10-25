@@ -4,10 +4,10 @@ use std::{collections::BTreeMap, fs, io::Error, path::PathBuf};
 use crate::sstable::SSTable;
 
 pub struct LsmTree {
-    pub data_dir: PathBuf,
+    data_dir: PathBuf,
     pub memtable: BTreeMap<String, String>,
-    pub limit: usize,
-    pub sstable_list: Vec<SSTable>,
+    limit: usize,
+    sstable_list: Vec<SSTable>,
 }
 
 impl LsmTree {
@@ -39,13 +39,21 @@ impl LsmTree {
     pub fn get(&mut self, key: &str) -> Result<Option<String>, Error> {
         // Memtable から get する
         if let Some(value) = self.memtable.get(key) {
-            return Ok(Some(value.to_string()))
+            if value == "__delete flag__" {
+                return Ok(None)
+            } else {
+                return Ok(Some(value.to_string()))
+            }
         }
 
         // SSTable から get する
         for sstable in self.sstable_list.iter().rev() {
             if let Some(value) = sstable.get(key)? {
-                return Ok(Some(value))
+                if value == "__delete flag__" {
+                    return Ok(None)
+                } else {
+                    return Ok(Some(value))
+                }
             }
         }
 
