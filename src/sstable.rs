@@ -78,7 +78,6 @@ pub fn write_key_value(buf_writer: &mut BufWriter<File>, key: &str, value: &str)
     let key_bytes: Vec<u8> = [&key.len().to_be_bytes(), key.as_bytes()].concat();
     let value_bytes: Vec<u8> = [&value.len().to_be_bytes(), value.as_bytes()].concat();
     let bytes: Vec<u8> = [key_bytes, value_bytes].concat();
-
     buf_writer.write(&bytes)
 }
 

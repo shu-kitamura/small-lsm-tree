@@ -21,7 +21,7 @@ fn main() {
 
     // get 実行 (put の結果を確認)
     match lsm.get(key) {
-        Ok(opt) => println!("put後: {:?}", opt),
+        Ok(opt) => println!("1回目のget(putの後)\t:{:?}", opt),
         Err(e) => eprintln!("{e}")
     };
 
@@ -33,14 +33,18 @@ fn main() {
 
     // get 実行 (delete の結果を確認)
     match lsm.get(key) {
-        Ok(opt) => println!("delete後: {:?}", opt),
+        Ok(opt) => println!("2回目のget(deleteの後)\t:{:?}", opt),
         Err(e) => eprintln!("{e}")
     }
 
     println!("--- flush の確認 ---");
     let path: PathBuf = PathBuf::from("./data");
 
-    println!("flush 前のファイル一覧");
+    // flush 前、memtable にデータがあることを確認
+    println!("flush 前のmemtable\t: {:?}", lsm.memtable);
+
+
+    println!("--- flush 前のファイル一覧--- ");
     let files: fs::ReadDir = fs::read_dir(&path).unwrap();
     for result in files {
         println!("{:?}", result.unwrap());
@@ -51,14 +55,14 @@ fn main() {
         eprintln!("{e}")
     };
 
-    println!("flush 後のファイル一覧");
+    println!("--- flush 後のファイル一覧 ---");
     let files: fs::ReadDir = fs::read_dir(&path).unwrap();
     for result in files {
         println!("{:?}", result.unwrap());
     }
 
     // flush 後、memtable が空になっていることを確認
-    println!("{:?}", lsm.memtable);
+    println!("flush 後のmemtable\t: {:?}", lsm.memtable);
 
     // SSTable から get できることを確認
     match lsm.get(key) {
